@@ -40,17 +40,8 @@
     <Reference Include="AngleSharp, Version=0.9.9.0, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea">
       <HintPath>..\packages\AngleSharp.0.9.9\lib\net45\AngleSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
-      <HintPath>..\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
-    </Reference>
     <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
       <HintPath>..\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Common.Logging.Log4Net1215, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
-      <HintPath>..\packages\Common.Logging.Log4Net1215.3.4.1\lib\net40\Common.Logging.Log4Net1215.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a">
-      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -67,12 +58,32 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommonLoggingLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+      <Compile Include="SupportedBrowsers.cs"/>
+      <Compile Include="WebDriver\BrowserStrategies\BrowserStrategyBase.cs"/>
+      <Compile Include="WebDriver\BrowserStrategies\ChromeEmulationStrategy.cs"/>
+      <Compile Include="WebDriver\BrowserStrategies\ChromeStrategy.cs"/>
+      <Compile Include="WebDriver\BrowserStrategies\EdgeStrategy.cs"/>
+      <Compile Include="WebDriver\BrowserStrategies\FirefoxStrategy.cs"/>
+      <Compile Include="WebDriver\BrowserStrategies\IBrowserStrategy.cs"/>
+      <Compile Include="WebDriver\BrowserStrategies\InternetExplorerStrategy.cs"/>
+      <Compile Include="WebDriver\BrowserStrategies\PhantomjsStrategy.cs"/>
+      <Compile Include="WebDriver\DriverProvider.cs"/>
+      <Compile Include="WebDriver\WebDriverFactory.cs"/>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Common\Common.csproj">
+            <Project>{375BBF4D-8CC0-4C88-9140-4723778FE394}</Project>
+            <Name>Common</Name>
+        </ProjectReference>
+        <ProjectReference Include="..\Utils\Utils.csproj">
+            <Project>{D75F8E23-9C79-4E30-9DE6-B0644C2F338D}</Project>
+            <Name>Utils</Name>
+        </ProjectReference>
+    </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
