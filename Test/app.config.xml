@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <configSections>
+        <sectionGroup name="common">
+            <section name="logging" type="Common.Logging.ConfigurationSectionHandler, Common.Logging" />
+        </sectionGroup>
+        <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler,log4net" />
+    </configSections>
+
+    <appSettings>
+        <add key="Browser" value="Phantomjs" />
+        <add key="Url" value="http://msdn-dev-build2.pd.group.intl:8081" />
+        <add key="Timeout" value="30" />
+        <add key="ChromeEmulationDevice" value="Nexus 5X" />
+        <add key="DeviceName" value="Nexus 5X" />
+        <add key="UDID" value="" />
+        <!--<add key="OutputDir" value="C:\SQS_CSF" />-->
+        <add key="Logger" value="Multi" />
+        <add key="MultiLogs" value="Extent,CommonLogging" />
+        <!--<add key="Grid" value="http://localhost:4723/wd/hub" />-->
+        <!--<add key="ScreenshotPath" value="screenshots" />-->
+    </appSettings>
+
+    <!-- Common.Logging setup-->
+    <common>
+        <logging>
+            <factoryAdapter type="Common.Logging.Log4Net.Log4NetLoggerFactoryAdapter, Common.Logging.Log4Net1215">
+                <arg key="configType" value="INLINE" />
+            </factoryAdapter>
+        </logging>
+    </common>
+
+    <!-- Log4net Logging Setup -->
+    <log4net>
+        <appender name="FileAppender" type="log4net.Appender.FileAppender,log4net">
+            <file type="log4net.Util.PatternString" value="%property{OutputDir}/AutoQFramework.log" />
+            <appendToFile value="true" />
+            <lockingModel type="log4net.Appender.FileAppender+MinimalLock" />
+            <layout type="log4net.Layout.PatternLayout">
+                <conversionPattern value="%date [%thread] %level - %message%newline%exception" />
+            </layout>
+            <filter type="log4net.Filter.LevelRangeFilter">
+                <levelMin value="TRACE" />
+                <levelMax value="FATAL" />
+            </filter>
+        </appender>
+
+        <root>
+            <level value="DEBUG" />
+            <appender-ref ref="FileAppender" />
+        </root>
+    </log4net>
