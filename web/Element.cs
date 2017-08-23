@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Remote;
+using OpenQA.Selenium.Support.UI;
 using Utils;
 using web.WebDriver;
 
@@ -13,9 +16,6 @@ namespace web
     /// <summary>   An element. </summary>
     public class Element : IWebElement
     {
-        /// <summary>   The user actions. </summary>
-        public static readonly UserActions UserActions = new UserActions();
-
         /// <summary>
         ///     The logger
         /// </summary>
@@ -73,6 +73,19 @@ namespace web
             return element.FindElement(by);
         }
 
+        /// <summary>
+        /// To prevent having too many sleeps in tests use the WebDriverWait and ExpectedConditions
+        /// to wait for an element to be present
+        /// </summary>
+        /// <param name="locator"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        private static IWebElement WaitForElementToBePresent(By locator, int timeout)
+        {
+            var wait = new WebDriverWait(DriverProvider.GetDriver(), TimeSpan.FromSeconds(timeout));
+            return wait.Until(ExpectedConditions.ElementExists(locator));
+        }
+
         /// -------------------------------------------------------------------------------------------------
         /// <summary>   Searches for the given elements. </summary>
         /// <param name="by">   The by. </param>
@@ -86,27 +99,22 @@ namespace web
 
         /// -------------------------------------------------------------------------------------------------
         /// <summary>   Clears the content of this element. </summary>
-        /// <exception cref="InvalidElementStateException">
-        ///     Thrown when an Invalid Element State error
-        ///     condition occurs.
-        /// </exception>
-        /// -------------------------------------------------------------------------------------------------
         public virtual void Clear()
         {
-            throw new InvalidElementStateException(
-                $"Cannot clear {Locator} as it is not declared as a writable text element");
+            WaitForElementToBeClickable(Locator, Timeout).Click();
         }
 
         /// -------------------------------------------------------------------------------------------------
         /// <summary>   Clicks this element. </summary>
-        /// <exception cref="InvalidElementStateException">
-        ///     Thrown when an Invalid Element State error
-        ///     condition occurs.
-        /// </exception>
         /// -------------------------------------------------------------------------------------------------
         public virtual void Click()
         {
-            throw new InvalidElementStateException($"Element {Locator} is not a declared as a clickable element");
+            Click(Timeout);
+        }
+
+        private void Click(int timeout)
+        {
+            WaitForElementToBeClickable(Locator, timeout).Click();
         }
 
 
@@ -165,14 +173,14 @@ namespace web
 
         /// -------------------------------------------------------------------------------------------------
         /// <summary>   Submits this element to the web server. </summary>
-        /// <exception cref="InvalidElementStateException">
-        ///     Thrown when an Invalid Element State error
-        ///     condition occurs.
-        /// </exception>
         /// -------------------------------------------------------------------------------------------------
         public virtual void Submit()
         {
-            throw new InvalidElementStateException($"Cannot submit {Locator} as it is not declared as a form");
+            Submit(Timeout);
+        }
+
+        public virtual void Submit(int timeout){            var elem = WaitForElementToBeDisplayed(Locator, timeout);
+            elem.Submit();
         }
 
 
@@ -214,8 +222,6 @@ namespace web
             Logger.Debug("Finding child elements.");
             var element = WaitForElementToBePresent(Locator, timeout);
             return element.FindElements(by);
-            // TODO: Make this work with our Element implementation, fails with GetElementXpath method
-            // .Select(x => new Element(By.XPath(GetElementXPath(x)), timeout) as IWebElement).ToList().AsReadOnly()
         }
 
         /// -------------------------------------------------------------------------------------------------
@@ -258,8 +264,8 @@ namespace web
         }
 
         /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Gets element x coordinate path. </summary>
-        /// <returns>   The element x coordinate path. </returns>
+        /// <summary>   Gets element path. </summary>
+        /// <returns>   The element path. </returns>
         /// -------------------------------------------------------------------------------------------------
         public string GetElementXPath()
         {
@@ -267,9 +273,9 @@ namespace web
         }
 
         /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Gets element x coordinate path. </summary>
+        /// <summary>   Gets element path. </summary>
         /// <param name="timeout">  The timeout. </param>
-        /// <returns>   The element x coordinate path. </returns>
+        /// <returns>   The element path. </returns>
         /// -------------------------------------------------------------------------------------------------
         public string GetElementXPath(int timeout)
         {
@@ -278,9 +284,9 @@ namespace web
         }
 
         /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Gets element x coordinate path. </summary>
+        /// <summary>   Gets element path. </summary>
         /// <param name="element">  The element. </param>
-        /// <returns>   The element x coordinate path. </returns>
+        /// <returns>   The element path. </returns>
         /// -------------------------------------------------------------------------------------------------
         public string GetElementXPath(IWebElement element)
         {
@@ -367,6 +373,12 @@ namespace web
             return results;
         }
 
+        private static List<IWebElement> WaitForElementsPresent(By by, int timeout)
+        {
+            var wait = new WebDriverWait(DriverProvider.GetDriver(), TimeSpan.FromSeconds(timeout));
+            return wait.Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(by)).ToList();
+        }
+
         /// -------------------------------------------------------------------------------------------------
         /// <summary>   Gets a location. </summary>
         /// <returns>   The location. </returns>
@@ -439,7 +451,7 @@ namespace web
                 var driver = DriverProvider.GetDriver();
                 var element = WaitForElementToBeDisplayed(Locator, timeout);
                 var screenshot = ((ITakesScreenshot) driver).GetScreenshot();
-                var img = System.Drawing.Image.FromStream(new MemoryStream(screenshot.AsByteArray)) as Bitmap;
+                var img = Image.FromStream(new MemoryStream(screenshot.AsByteArray)) as Bitmap;
 
                 Logger.Debug("Returning screenshot cropped to element.");
                 return img?.Clone(new Rectangle(element.Location, element.Size), img.PixelFormat);
@@ -449,6 +461,12 @@ namespace web
                 Logger.Debug("Unable to take screenshot of element", exception);
                 throw;
             }
+        }
+
+        private static IWebElement WaitForElementToBeDisplayed(By locator, int timeout)
+        {
+            var wait = new WebDriverWait(DriverProvider.GetDriver(), TimeSpan.FromSeconds(timeout));
+            return wait.Until(ExpectedConditions.ElementIsVisible(locator));
         }
 
         /// -------------------------------------------------------------------------------------------------
@@ -592,7 +610,7 @@ namespace web
         }
 
         /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Query if 'timeout' is present. </summary>
+        /// <summary>   Query if element is present. </summary>
         /// <returns>   True if present, false if not. </returns>
         /// -------------------------------------------------------------------------------------------------
         public bool IsPresent()
@@ -601,7 +619,7 @@ namespace web
         }
 
         /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Query if 'timeout' is present. </summary>
+        /// <summary>   Query if element is present. </summary>
         /// <param name="timeout">  The timeout. </param>
         /// <returns>   True if present, false if not. </returns>
         /// -------------------------------------------------------------------------------------------------
@@ -623,16 +641,17 @@ namespace web
 
         /// -------------------------------------------------------------------------------------------------
         /// <summary>   Query if this object is selected. </summary>
-        /// <exception cref="InvalidElementStateException">
-        ///     Thrown when an Invalid Element State error
-        ///     condition occurs.
-        /// </exception>
         /// <returns>   True if selected, false if not. </returns>
         /// -------------------------------------------------------------------------------------------------
         public virtual bool IsSelected()
         {
-            throw new InvalidElementStateException(
-                $"Cannot check if {Locator} is selected as it is not declared as a selectable element");
+            return IsSelected((Timeout));
+        }
+
+        public virtual bool IsSelected(int timeout)
+        {
+            var elem = WaitForElementToBePresent(Locator, Timeout);
+            return elem.Selected;
         }
 
         /// -------------------------------------------------------------------------------------------------
@@ -649,7 +668,7 @@ namespace web
         /// -------------------------------------------------------------------------------------------------
         public void JsMouseHover(int timeout)
         {
-            UserActions.MouseHover(Locator, timeout, true);
+            MouseHover(Locator, timeout, true);
         }
 
 
@@ -665,83 +684,7 @@ namespace web
         /// -------------------------------------------------------------------------------------------------
         public void MouseHover(int timeout)
         {
-            UserActions.MouseHover(Locator, timeout, false);
-        }
-
-        /// <summary>  Double tap touch screen. </summary>
-        public void DoubleTap()
-        {
-            DoubleTap(Timeout);
-        }
-
-        /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Double tap touch screen. </summary>
-        /// <param name="timeout">  The timeout. </param>
-        /// -------------------------------------------------------------------------------------------------
-        public void DoubleTap(int timeout)
-        {
-            TouchActions.DoubleTap(Locator, timeout);
-        }
-
-        /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Flick touch screen. </summary>
-        /// <param name="offsetX">  The x offset. </param>
-        /// <param name="offsetY">  The y offset. </param>
-        /// <param name="speed">  The speed. </param>
-        /// -------------------------------------------------------------------------------------------------
-        public void Flick(int offsetX, int offsetY, int speed)
-        {
-            Flick(offsetX, offsetY, speed, Timeout);
-        }
-
-        /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Flick touch screen. </summary>
-        /// <param name="offsetX">  x offset. </param>
-        /// <param name="offsetY">  The y offset. </param>
-        /// <param name="speed">  The speed. </param>
-        /// <param name="timeout">  The timeout. </param>
-        /// -------------------------------------------------------------------------------------------------
-        public void Flick(int offsetX, int offsetY, int speed, int timeout)
-        {
-            TouchActions.Flick(Locator, offsetX, offsetY, speed, timeout);
-        }
-
-        /// <summary>   Long press touch screen. </summary>
-        public void LongPress()
-        {
-            LongPress(Timeout);
-        }
-
-        /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Long press touch screen. </summary>
-        /// <param name="timeout">  The timeout. </param>
-        /// -------------------------------------------------------------------------------------------------
-        public void LongPress(int timeout)
-        {
-            TouchActions.LongPress(Locator, timeout);
-        }
-
-        /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Scroll on touch screen. </summary>
-        /// <param name="offsetX">  The x offset. </param>
-        /// <param name="offsetY">  The y offset. </param>
-        /// <param name="speed">  The speed. </param>
-        /// -------------------------------------------------------------------------------------------------
-        public void Scroll(int offsetX, int offsetY, int speed)
-        {
-            Scroll(offsetX, offsetY, speed, Timeout);
-        }
-
-        /// -------------------------------------------------------------------------------------------------
-        /// <summary>   Scroll on touch screen. </summary>
-        /// <param name="offsetX">  The x offset. </param>
-        /// <param name="offsetY">  The y offset. </param>
-        /// <param name="speed">  The speed. </param>
-        /// <param name="timeout">  The timeout. </param>
-        /// -------------------------------------------------------------------------------------------------
-        public void Scroll(int offsetX, int offsetY, int speed, int timeout)
-        {
-            TouchActions.Scroll(Locator, offsetX, offsetY, speed, timeout);
+            MouseHover(Locator, timeout, false);
         }
 
         /// -------------------------------------------------------------------------------------------------
@@ -764,7 +707,7 @@ namespace web
             Logger.Debug($"Sending {text} to element.");
             try
             {
-                var remoteUploadProperty = ReadSetting("RemoteUpload");
+                var remoteUploadProperty = Config.ReadSetting("RemoteUpload");
 
                 var elem = WaitForElementToBeClickable(Locator, timeout);
 
@@ -787,10 +730,16 @@ namespace web
             }
             catch (Exception ex)
             {
-                Logger.Debug($"Cannot send keys to element.", ex);
+                Logger.Debug("Cannot send keys to element.", ex);
                 throw;
             }
             Logger.Debug($"{text} sent to element.");
+        }
+
+        private IWebElement WaitForElementToBeClickable(By locator, int timeout)
+        {
+            var wait = new WebDriverWait(DriverProvider.GetDriver(), TimeSpan.FromSeconds(timeout));
+            return wait.Until(ExpectedConditions.ElementToBeClickable(locator));
         }
 
 
@@ -798,7 +747,7 @@ namespace web
         public void SetTimeout()
         {
             Logger.Debug("Setting timeout to configured value or default.");
-            var timeoutValue = ReadSetting("Timeout");
+            var timeoutValue = Config.ReadSetting("Timeout");
 
             if (!string.IsNullOrWhiteSpace(timeoutValue)) SetTimeout(int.Parse(timeoutValue));
             else if (Timeout == 0) SetTimeout(30);
@@ -812,6 +761,39 @@ namespace web
         {
             Logger.Debug($"Setting timeout to {timeout}");
             Timeout = timeout;
+        }
+
+        /// <summary>
+        ///     Method to hover an <paramref name="locator" /> with the mouse
+        ///     cursor.
+        /// </summary>
+        /// <param name="locator">WebElement to hover</param>
+        /// <param name="timeout">How long to wait</param>
+        /// <param name="useJavascript">Try to use javascript?</param>
+        public void MouseHover(By locator, int timeout, bool useJavascript)
+        {
+            Logger.Debug("Attempting to hover over element.");
+            try
+            {
+                var elem = WaitForElementToBeDisplayed(locator, timeout);
+                if (useJavascript)
+                {
+                    Logger.Debug("Using javascript.");
+                    var js = (IJavaScriptExecutor) DriverProvider.GetDriver();
+                    js.ExecuteScript("arguments[0].onmouseover();", elem);
+                }
+                else
+                {
+                    var action = new Actions(DriverProvider.GetDriver());
+                    action.MoveToElement(elem).Perform();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug("Element could not be Hovered.", ex);
+                throw;
+            }
+            Logger.Debug("Hovering over element.");
         }
     }
 }
