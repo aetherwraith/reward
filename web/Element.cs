@@ -149,6 +149,16 @@ namespace web
             return GetCssValue(propertyName, Timeout);
         }
 
+        /// <summary>
+        /// Provide a wrapper around the selenium select class
+        /// </summary>
+        /// <returns>A select element</returns>
+        public SelectElement Select()
+        {
+            var elem = WaitForElementToBeClickable(Locator, Timeout);
+            return new SelectElement(elem);
+        }
+
 
         /// <summary>   The location. </summary>
         public Point Location => GetLocation();
