@@ -58,8 +58,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+      <Compile Include="Element.cs"/>
     <Compile Include="Properties\AssemblyInfo.cs" />
       <Compile Include="SupportedBrowsers.cs"/>
+      <Compile Include="UserActions.cs"/>
       <Compile Include="WebDriver\BrowserStrategies\BrowserStrategyBase.cs"/>
       <Compile Include="WebDriver\BrowserStrategies\ChromeEmulationStrategy.cs"/>
       <Compile Include="WebDriver\BrowserStrategies\ChromeStrategy.cs"/>
@@ -75,10 +77,6 @@
     <None Include="packages.config" />
   </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Common\Common.csproj">
-            <Project>{375BBF4D-8CC0-4C88-9140-4723778FE394}</Project>
-            <Name>Common</Name>
-        </ProjectReference>
         <ProjectReference Include="..\Utils\Utils.csproj">
             <Project>{D75F8E23-9C79-4E30-9DE6-B0644C2F338D}</Project>
             <Name>Utils</Name>
